@@ -8,7 +8,7 @@ Enterprise Integration Demo based on [201-logic-app-veter-pipeline in Azure/azur
     <img src="http://armviz.io/visualizebutton.png"/>
 </a>
 
-This template creates a VETER pipeline using Logic Apps. It creates an integration account, adds schema/map into it, creates a logic app and associates it with the integration account. The logic app implements a VETER pipeline using Xml Validation, XPath Extract and Transform Xml operations.
+This template creates a VETER pipeline using Logic Apps. It creates an integration account, adds schema/map into it, creates a logic app and associates it with the integration account. The logic app implements a VETER pipeline using Xml Validation, XPath Extract and Transform Xml operations. It responds with an HTTP status code indicating the success/failure of the operation and sending a message to an Azure Service Bus queue ('saporders' for success or 'invalidorders' for failures).
 `Tags: VETER, Logic Apps, Integration Account, Enterprise Integration`
 
 ## Deployment steps
@@ -25,6 +25,7 @@ Once the deployment is completed, you can perform below steps to test your Logic
     - Set request body to the content of sample-order.xml (it is present under artifacts folder in this template).
 - On successful execution, the logic app will respond with the transformed message (an SAP order) in response body.
 ![Image of sample request-response](https://raw.githubusercontent.com/roberto-mardeni/logic-app-integration-demo/master/images/request-response.png "Sample request-response")
+- You can check the queues in the service bus for the presence of messages
 
 ## Notes
 
