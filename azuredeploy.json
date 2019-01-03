@@ -44,12 +44,119 @@
       "metadata": {
         "description": "Location of the Logic App."
       }
+    },
+    "serviceBusName": {
+      "type": "string",
+      "defaultValue": "VETERBus",
+      "minLength": 1,
+      "maxLength": 80,
+      "metadata": {
+        "description": "Name of the Service Bus."
+      }
     }
   },
-  "variables": { },
-  "resources": [
+  "variables": {
+    "connectionServiceBusName": "servicebus",
+    "serviceBusAccessKeyName": "RootManageSharedAccessKey"
+  },
+  "resources": [{
+      "type": "Microsoft.ServiceBus/namespaces",
+      "sku": {
+        "name": "Basic",
+        "tier": "Basic"
+      },
+      "name": "[parameters('serviceBusName')]",
+      "apiVersion": "2017-04-01",
+      "location": "[parameters('logicAppLocation')]",
+      "scale": null,
+      "properties": {}
+    },
     {
-      "properties": { },
+      "type": "Microsoft.ServiceBus/namespaces/queues",
+      "name": "[concat(parameters('serviceBusName'), '/invalidorders')]",
+      "apiVersion": "2017-04-01",
+      "location": "[parameters('logicAppLocation')]",
+      "scale": null,
+      "properties": {
+        "lockDuration": "PT30S",
+        "maxSizeInMegabytes": 16384,
+        "requiresDuplicateDetection": false,
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P7D",
+        "deadLetteringOnMessageExpiration": false,
+        "enableBatchedOperations": true,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": true,
+        "enableExpress": false
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/queues",
+      "name": "[concat(parameters('serviceBusName'), '/saporders')]",
+      "apiVersion": "2017-04-01",
+      "location": "[parameters('logicAppLocation')]",
+      "scale": null,
+      "properties": {
+        "lockDuration": "PT30S",
+        "maxSizeInMegabytes": 16384,
+        "requiresDuplicateDetection": false,
+        "requiresSession": false,
+        "defaultMessageTimeToLive": "P7D",
+        "deadLetteringOnMessageExpiration": false,
+        "enableBatchedOperations": true,
+        "duplicateDetectionHistoryTimeWindow": "PT10M",
+        "maxDeliveryCount": 10,
+        "status": "Active",
+        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+        "enablePartitioning": true,
+        "enableExpress": false
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Web/connections",
+      "name": "[variables('connectionServiceBusName')]",
+      "apiVersion": "2016-06-01",
+      "location": "[parameters('logicAppLocation')]",
+      "scale": null,
+      "properties": {
+        "displayName": "VETERBus",
+        "customParameterValues": {},
+        "api": {
+          "id": "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusName'))]"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/AuthorizationRules",
+      "name": "[concat(parameters('serviceBusName'), '/', variables('serviceBusAccessKeyName'))]",
+      "apiVersion": "2017-04-01",
+      "location": "[parameters('logicAppLocation')]",
+      "scale": null,
+      "properties": {
+        "rights": [
+          "Listen",
+          "Manage",
+          "Send"
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusName'))]"
+      ]
+    },
+    {
+      "properties": {},
       "sku": {
         "name": "Standard"
       },
@@ -99,112 +206,199 @@
         },
         "definition": {
           "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
-          "actions": {
-              "Condition": {
-                  "actions": {
-                      "Response": {
-                          "inputs": {
-                              "body": "@body('Transform_XML')",
-                              "statusCode": 200
-                          },
-                          "runAfter": {},
-                          "type": "Response"
-                      }
-                  },
-                  "else": {
-                      "actions": {
-                          "Response_2": {
-                              "inputs": {
-                                  "body": "Invalid Request",
-                                  "statusCode": 400
-                              },
-                              "kind": "Http",
-                              "runAfter": {},
-                              "type": "Response"
-                          }
-                      }
-                  },
-                  "expression": "@equals(xpath(xml(body('Transform_XML')), 'string(count(/.))'), '1')",
-                  "runAfter": {
-                      "Transform_XML": [
-                          "Succeeded"
-                      ]
-                  },
-                  "type": "If"
-              },
-              "Transform_XML": {
-                  "inputs": {
-                      "content": "@{triggerBody()}",
-                      "integrationAccount": {
-                          "map": {
-                              "name": "SAPOrderMap"
-                          }
-                      }
-                  },
-                  "runAfter": {
-                      "XML_Validation": [
-                          "Succeeded"
-                      ]
-                  },
-                  "type": "Xslt"
-              },
-              "When_Transform_XML_Fails": {
-                  "inputs": {
-                      "body": "Unable to map Integration Order to SAP Order",
-                      "statusCode": 500
-                  },
-                  "kind": "Http",
-                  "runAfter": {
-                      "Transform_XML": [
-                          "Failed"
-                      ]
-                  },
-                  "type": "Response"
-              },
-              "When_XML_Validation_Fails": {
-                  "inputs": {
-                      "body": "XML Validation Failed",
-                      "statusCode": 400
-                  },
-                  "kind": "Http",
-                  "runAfter": {
-                      "XML_Validation": [
-                          "Failed"
-                      ]
-                  },
-                  "type": "Response"
-              },
-              "XML_Validation": {
-                  "inputs": {
-                      "content": "@{triggerBody()}",
-                      "integrationAccount": {
-                          "schema": {
-                              "name": "Order"
-                          }
-                      }
-                  },
-                  "runAfter": {},
-                  "type": "XmlValidation"
-              }
-          },
           "contentVersion": "1.0.0.0",
-          "outputs": {},
-          "parameters": {},
+          "parameters": {
+            "$connections": {
+              "defaultValue": {},
+              "type": "Object"
+            }
+          },
           "triggers": {
-              "manual": {
-                  "inputs": {
-                      "schema": {}
-                  },
-                  "kind": "Http",
-                  "type": "Request"
+            "manual": {
+              "type": "Request",
+              "kind": "Http",
+              "inputs": {
+                "schema": {}
               }
+            }
+          },
+          "actions": {
+            "Condition": {
+              "actions": {
+                "Response": {
+                  "runAfter": {},
+                  "type": "Response",
+                  "inputs": {
+                    "body": "@body('Transform_XML')",
+                    "statusCode": 200
+                  }
+                },
+                "Send_valid_SAP_Order_to_queue": {
+                  "runAfter": {
+                    "Response": [
+                      "Succeeded"
+                    ]
+                  },
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "body": {
+                      "ContentData": "@{base64(body('Transform_XML'))}",
+                      "ContentType": "application/xml"
+                    },
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['servicebus']['connectionId']"
+                      }
+                    },
+                    "method": "post",
+                    "path": "/@{encodeURIComponent(encodeURIComponent('saporders'))}/messages",
+                    "queries": {
+                      "systemProperties": "None"
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "Transform_XML": [
+                  "Succeeded"
+                ]
+              },
+              "else": {
+                "actions": {
+                  "Response_2": {
+                    "runAfter": {},
+                    "type": "Response",
+                    "kind": "Http",
+                    "inputs": {
+                      "body": "Invalid Request",
+                      "statusCode": 400
+                    }
+                  },
+                  "Send_invalid_SAP_Order_to_queue": {
+                    "runAfter": {
+                      "Response_2": [
+                        "Succeeded"
+                      ]
+                    },
+                    "type": "ApiConnection",
+                    "inputs": {
+                      "body": {
+                        "ContentData": "@{base64(triggerBody())}"
+                      },
+                      "host": {
+                        "connection": {
+                          "name": "@parameters('$connections')['servicebus']['connectionId']"
+                        }
+                      },
+                      "method": "post",
+                      "path": "/@{encodeURIComponent(encodeURIComponent('invalidorders'))}/messages",
+                      "queries": {
+                        "systemProperties": "None"
+                      }
+                    }
+                  }
+                }
+              },
+              "expression": "@equals(xpath(xml(body('Transform_XML')), 'string(count(/.))'), '1')",
+              "type": "If"
+            },
+            "Send_invalid_XML_to_queue": {
+              "runAfter": {
+                "When_XML_Validation_Fails": [
+                  "Succeeded"
+                ]
+              },
+              "type": "ApiConnection",
+              "inputs": {
+                "body": {
+                  "ContentData": "@{base64(triggerBody())}"
+                },
+                "host": {
+                  "connection": {
+                    "name": "@parameters('$connections')['servicebus']['connectionId']"
+                  }
+                },
+                "method": "post",
+                "path": "/@{encodeURIComponent(encodeURIComponent('invalidorders'))}/messages",
+                "queries": {
+                  "systemProperties": "None"
+                }
+              }
+            },
+            "Transform_XML": {
+              "runAfter": {
+                "XML_Validation": [
+                  "Succeeded"
+                ]
+              },
+              "type": "Xslt",
+              "inputs": {
+                "content": "@{triggerBody()}",
+                "integrationAccount": {
+                  "map": {
+                    "name": "SAPOrderMap"
+                  }
+                }
+              }
+            },
+            "When_Transform_XML_Fails": {
+              "runAfter": {
+                "Transform_XML": [
+                  "Failed"
+                ]
+              },
+              "type": "Response",
+              "kind": "Http",
+              "inputs": {
+                "body": "Unable to map Integration Order to SAP Order",
+                "statusCode": 500
+              }
+            },
+            "When_XML_Validation_Fails": {
+              "runAfter": {
+                "XML_Validation": [
+                  "Failed"
+                ]
+              },
+              "type": "Response",
+              "kind": "Http",
+              "inputs": {
+                "body": "XML Validation Failed",
+                "statusCode": 400
+              }
+            },
+            "XML_Validation": {
+              "runAfter": {},
+              "type": "XmlValidation",
+              "inputs": {
+                "content": "@{triggerBody()}",
+                "integrationAccount": {
+                  "schema": {
+                    "name": "Order"
+                  }
+                }
+              }
+            }
+          },
+          "outputs": {}
+        },
+        "parameters": {
+          "$connections": {
+            "value": {
+              "servicebus": {
+                "connectionId": "[resourceId('Microsoft.Web/connections', variables('connectionServiceBusName'))]",
+                "connectionName": "servicebus",
+                "id": "[resourceId('Microsoft.Web/locations/managedApis', variables('connectionServiceBusName'))]"
+              }
+            }
           }
-      }
+        }
       },
       "dependsOn": [
-        "[parameters('integrationAccountName')]"
+        "[resourceId('Microsoft.Logic/integrationAccounts', parameters('integrationAccountName'))]",
+        "[resourceId('Microsoft.Web/connections', variables('connectionServiceBusName'))]"
       ]
     }
   ],
-  "outputs": { }
+  "outputs": {}
 }
