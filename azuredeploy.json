@@ -57,7 +57,7 @@
   },
   "variables": {
     "connectionServiceBusName": "servicebus",
-    "connectionServiceBusId": "[concat(subscription(), '/providers/Microsoft.Web/locations/', parameters('logicAppLocation'), '/managedApis/', variables('connectionServiceBusName'))]",
+    "connectionServiceBusId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', parameters('logicAppLocation'), '/managedApis/', variables('connectionServiceBusName'))]",
     "serviceBusAccessKeyName": "RootManageSharedAccessKey"
   },
   "resources": [{
