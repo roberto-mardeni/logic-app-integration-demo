@@ -79,18 +79,9 @@
       "location": "[parameters('logicAppLocation')]",
       "scale": null,
       "properties": {
-        "lockDuration": "PT30S",
-        "maxSizeInMegabytes": 16384,
-        "requiresDuplicateDetection": false,
-        "requiresSession": false,
+        "maxSizeInMegabytes": 1024,
         "defaultMessageTimeToLive": "P7D",
-        "deadLetteringOnMessageExpiration": false,
-        "enableBatchedOperations": true,
-        "duplicateDetectionHistoryTimeWindow": "PT10M",
-        "maxDeliveryCount": 10,
-        "status": "Active",
-        "enablePartitioning": true,
-        "enableExpress": false
+        "enablePartitioning": true
       },
       "dependsOn": [
         "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusName'))]"
@@ -103,18 +94,9 @@
       "location": "[parameters('logicAppLocation')]",
       "scale": null,
       "properties": {
-        "lockDuration": "PT30S",
-        "maxSizeInMegabytes": 16384,
-        "requiresDuplicateDetection": false,
-        "requiresSession": false,
-        "defaultMessageTimeToLive": "P7D",
-        "deadLetteringOnMessageExpiration": false,
-        "enableBatchedOperations": true,
-        "duplicateDetectionHistoryTimeWindow": "PT10M",
-        "maxDeliveryCount": 10,
-        "status": "Active",
-        "enablePartitioning": true,
-        "enableExpress": false
+        "maxSizeInMegabytes": 1024,
+        "defaultMessageTimeToLive": "P14D",
+        "enablePartitioning": true
       },
       "dependsOn": [
         "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusName'))]"
