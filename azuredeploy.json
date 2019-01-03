@@ -57,8 +57,7 @@
   },
   "variables": {
     "connectionServiceBusName": "servicebus",
-    "connectionServiceBusId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', parameters('logicAppLocation'), '/managedApis/', variables('connectionServiceBusName'))]",
-    "serviceBusAccessKeyName": "RootManageSharedAccessKey"
+    "connectionServiceBusId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Web/locations/', parameters('logicAppLocation'), '/managedApis/', variables('connectionServiceBusName'))]"
   },
   "resources": [{
       "type": "Microsoft.ServiceBus/namespaces",
@@ -121,7 +120,7 @@
     },
     {
       "type": "Microsoft.ServiceBus/namespaces/AuthorizationRules",
-      "name": "[concat(parameters('serviceBusName'), '/', variables('serviceBusAccessKeyName'))]",
+      "name": "[concat(parameters('serviceBusName'), '/RootManageSharedAccessKey')]",
       "apiVersion": "2017-04-01",
       "location": "[parameters('logicAppLocation')]",
       "scale": null,
@@ -129,6 +128,21 @@
         "rights": [
           "Listen",
           "Manage",
+          "Send"
+        ]
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.ServiceBus/namespaces/AuthorizationRules",
+      "name": "[concat(parameters('serviceBusName'), '/SendOnly')]",
+      "apiVersion": "2017-04-01",
+      "location": "[parameters('logicAppLocation')]",
+      "scale": null,
+      "properties": {
+        "rights": [
           "Send"
         ]
       },
