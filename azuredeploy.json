@@ -57,6 +57,7 @@
   },
   "variables": {
     "connectionServiceBusName": "servicebus",
+    "connectionServiceBusId": "[concat(subscription(), '/providers/Microsoft.Web/locations/', parameters('logicAppLocation'), '/managedApis/', variables('connectionServiceBusName'))]",
     "serviceBusAccessKeyName": "RootManageSharedAccessKey"
   },
   "resources": [{
@@ -88,7 +89,6 @@
         "duplicateDetectionHistoryTimeWindow": "PT10M",
         "maxDeliveryCount": 10,
         "status": "Active",
-        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
         "enablePartitioning": true,
         "enableExpress": false
       },
@@ -113,7 +113,6 @@
         "duplicateDetectionHistoryTimeWindow": "PT10M",
         "maxDeliveryCount": 10,
         "status": "Active",
-        "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
         "enablePartitioning": true,
         "enableExpress": false
       },
@@ -131,7 +130,7 @@
         "displayName": "VETERBus",
         "customParameterValues": {},
         "api": {
-          "id": "[resourceId('Microsoft.ServiceBus/namespaces', parameters('serviceBusName'))]"
+          "id": "[variables('connectionServiceBusId')]"
         }
       },
       "dependsOn": [
@@ -388,7 +387,7 @@
               "servicebus": {
                 "connectionId": "[resourceId('Microsoft.Web/connections', variables('connectionServiceBusName'))]",
                 "connectionName": "servicebus",
-                "id": "[resourceId('Microsoft.Web/locations/managedApis', variables('connectionServiceBusName'))]"
+                "id": "[variables('connectionServiceBusId')]"
               }
             }
           }
